@@ -13,7 +13,14 @@
     <form id="loginForm" class="auth-form">
       <label>
         Email
-        <input name="email" type="email" autocomplete="email" required />
+        <input
+          name="email"
+          type="email"
+          autocomplete="email"
+          pattern="^[a-zA-Z0-9._%+-]+@qiu\.edu\.my$"
+          title="Please use your QIU email (@qiu.edu.my)"
+          required
+        />
       </label>
 
       <label>
@@ -21,7 +28,8 @@
         <input name="password" type="password" autocomplete="current-password" required />
       </label>
 
-        <button type="submit" class="primary-btn">Log in</button>      <p class="auth-links">
+      <button type="submit" class="primary-btn">Log in</button>
+      <p class="auth-links">
         <a href="/auth/forgot-password.html">Forgot password?</a>
         <span>•</span>
         <a href="/auth/register.html">Create account</a>
@@ -32,42 +40,38 @@
   </main>
 
   <script>
-    console.log("login script loaded");
-
     const form = document.getElementById("loginForm");
     const msg = document.getElementById("msg");
 
-    console.log("form found?", !!form);
-    console.log("msg found?", !!msg);
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.textContent = "";
 
-    if (!form) {
-      console.error('No form with id="loginForm" found');
-    } else {
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        msg.textContent = "Logging in...";
+      const data = Object.fromEntries(new FormData(form).entries());
+      data.email = (data.email || "").toLowerCase().trim();
 
-        const data = Object.fromEntries(new FormData(form).entries());
+      if (!data.email.endsWith("@qiu.edu.my")) {
+        msg.textContent = "Only QIU email (@qiu.edu.my) is allowed";
+        return;
+      }
 
-        try {
-          const res = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          });
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
 
-          const out = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(out.message || "Login failed");
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.message || "Login failed");
 
-          if (out.token) localStorage.setItem("token", out.token);
+        if (out.token) localStorage.setItem("token", out.token);
 
-          window.location.href = "/index.html";
-        } catch (err) {
-          msg.textContent = err.message;
-          console.error(err);
-        }
-      });
-    }
+        window.location.href = "/index.html";
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
   </script>
 </body>
 </html>
