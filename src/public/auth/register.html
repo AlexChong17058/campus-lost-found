@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Register</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <main class="auth-container">
+    <h1>Create account</h1>
+
+    <form id="registerForm" class="auth-form">
+      <label>
+        Name
+        <input name="name" type="text" autocomplete="name" required />
+      </label>
+
+      <label>
+        Email
+        <input name="email" type="email" autocomplete="email" required />
+      </label>
+
+      <label>
+        Password
+        <input name="password" type="password" minlength="8" autocomplete="new-password" required />
+      </label>
+
+        <button type="submit" class="primary-btn">Register</button>      <p class="auth-links">
+        <a href="/auth/login.html">Already have an account?</a>
+      </p>
+
+      <p id="msg" class="auth-msg" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <script>
+    const form = document.getElementById("registerForm");
+    const msg = document.getElementById("msg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.textContent = "";
+
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.message || "Registration failed");
+
+        window.location.href = "/auth/login.html";
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <main class="auth-container">
+    <h1>Login</h1>
+
+    <form id="loginForm" class="auth-form">
+      <label>
+        Email
+        <input name="email" type="email" autocomplete="email" required />
+      </label>
+
+      <label>
+        Password
+        <input name="password" type="password" autocomplete="current-password" required />
+      </label>
+
+        <button type="submit" class="primary-btn">Log in</button>      <p class="auth-links">
+        <a href="/auth/forgot-password.html">Forgot password?</a>
+        <span>•</span>
+        <a href="/auth/register.html">Create account</a>
+      </p>
+
+      <p id="msg" class="auth-msg" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <script>
+    console.log("login script loaded");
+
+    const form = document.getElementById("loginForm");
+    const msg = document.getElementById("msg");
+
+    console.log("form found?", !!form);
+    console.log("msg found?", !!msg);
+
+    if (!form) {
+      console.error('No form with id="loginForm" found');
+    } else {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        msg.textContent = "Logging in...";
+
+        const data = Object.fromEntries(new FormData(form).entries());
+
+        try {
+          const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+
+          const out = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(out.message || "Login failed");
+
+          if (out.token) localStorage.setItem("token", out.token);
+
+          window.location.href = "/index.html";
+        } catch (err) {
+          msg.textContent = err.message;
+          console.error(err);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

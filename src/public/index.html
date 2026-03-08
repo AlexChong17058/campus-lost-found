@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Lost & Found</title>
+  <link rel="stylesheet" href="/css/style.css" />
+
+  <script>
+    // Check localStorage directly to avoid global variable conflicts
+    if (!localStorage.getItem("token")) {
+      window.location.replace("/auth/login.html");
+    }
+  </script>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo">Campus Lost & Found</div>
+
+    <div class="nav-actions">
+      <span id="userGreeting"></span>
+      <button id="openFormBtn" class="primary-btn">Report Item</button>
+      <button id="logoutBtn" class="secondary-btn">Logout</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Find What Matters.</h1>
+    <p>A centralized, secure and modern campus lost & found system.</p>
+  </section>
+
+  <section class="filters">
+
+    <button id="allItemsBtn" class="secondary-btn">All Items</button>
+    <button id="myItemsBtn" class="secondary-btn">My Reports</button>
+
+    <select id="categoryFilter">
+      <option value="">All Categories</option>
+      <option value="Lost">Lost</option>
+      <option value="Found">Found</option>
+    </select>
+
+    <select id="statusFilter">
+      <option value="">All Status</option>
+      <option value="Active">Active</option>
+      <option value="Claimed">Claimed</option>
+      <option value="Resolved">Resolved</option>
+    </select>
+
+  </section>
+
+  <!-- Dashboard Stats -->
+  <section class="stats">
+    <div class="stat-card">
+      <h3 id="totalCount">0</h3>
+      <p>Total Items</p>
+    </div>
+
+    <div class="stat-card">
+      <h3 id="activeCount">0</h3>
+      <p>Active</p>
+    </div>
+
+    <div class="stat-card">
+      <h3 id="claimedCount">0</h3>
+      <p>Claimed</p>
+    </div>
+
+    <div class="stat-card">
+      <h3 id="resolvedCount">0</h3>
+      <p>Resolved</p>
+    </div>
+  </section>
+
+  <main id="itemsContainer" class="items-grid"></main>
+
+  <!-- Modal -->
+  <div id="itemModal" class="modal hidden">
+    <div class="modal-content">
+      <span id="closeModal">&times;</span>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Form Modal -->
+  <div id="formModal" class="modal hidden">
+    <div class="modal-content">
+      <span id="closeForm">&times;</span>
+      <h2>Report Item</h2>
+
+      <form id="itemForm">
+        <input type="text" name="title" placeholder="Title" required />
+        <textarea name="description" placeholder="Description" required></textarea>
+
+        <select name="category" required>
+          <option value="">Select Category</option>
+          <option value="Lost">Lost</option>
+          <option value="Found">Found</option>
+        </select>
+
+        <input type="text" name="location" placeholder="Location" required />
+        <input type="date" name="date" required />
+        <input type="text" name="contactInfo" placeholder="Contact Info" required />
+
+        <button type="submit" class="primary-btn">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
