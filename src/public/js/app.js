@@ -19,6 +19,8 @@ const modalBody = document.getElementById("modalBody");
 const logoutBtn = document.getElementById("logoutBtn");
 
 let showMine = false;
+let editingItemId = null;
+let isEditMode = false;
 
 function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -45,7 +47,6 @@ async function loadCurrentUser() {
     if (greeting) {
       greeting.textContent = `👤 ${user.name}`;
     }
-
   } catch (err) {
     console.error("Failed to load user info");
   }
@@ -72,7 +73,6 @@ async function loadStats() {
     if (active) active.textContent = stats.Active || 0;
     if (claimed) claimed.textContent = stats.Claimed || 0;
     if (resolved) resolved.textContent = stats.Resolved || 0;
-
   } catch (err) {
     console.error("Failed to load stats");
   }
@@ -104,6 +104,48 @@ function isOwner(item) {
 }
 
 /* =============================
+   FORM MODE HELPERS
+============================= */
+
+function resetFormMode() {
+  isEditMode = false;
+  editingItemId = null;
+  itemForm.reset();
+
+  const title = formModal.querySelector("h2");
+  const submitBtn = itemForm.querySelector('button[type="submit"]');
+
+  if (title) title.textContent = "Report Item";
+  if (submitBtn) submitBtn.textContent = "Submit";
+}
+
+function openCreateForm() {
+  resetFormMode();
+  formModal.classList.remove("hidden");
+}
+
+function openEditForm(item) {
+  isEditMode = true;
+  editingItemId = item._id;
+
+  const title = formModal.querySelector("h2");
+  const submitBtn = itemForm.querySelector('button[type="submit"]');
+
+  if (title) title.textContent = "Edit Report";
+  if (submitBtn) submitBtn.textContent = "Save Changes";
+
+  itemForm.title.value = item.title || "";
+  itemForm.description.value = item.description || "";
+  itemForm.category.value = item.category || "";
+  itemForm.location.value = item.location || "";
+  itemForm.date.value = item.date ? item.date.slice(0, 10) : "";
+  itemForm.contactInfo.value = item.contactInfo || "";
+
+  itemModal.classList.add("hidden");
+  formModal.classList.remove("hidden");
+}
+
+/* =============================
    RENDER ITEMS
 ============================= */
 
@@ -116,7 +158,6 @@ function renderItems(items) {
   }
 
   items.forEach((item) => {
-
     const card = document.createElement("div");
     card.className = "card";
 
@@ -130,7 +171,6 @@ function renderItems(items) {
     `;
 
     card.addEventListener("click", () => {
-
       const owner = isOwner(item);
 
       modalBody.innerHTML = `
@@ -146,6 +186,7 @@ function renderItems(items) {
           owner
             ? `
           <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="editBtn" class="secondary-btn">Edit</button>
             <button id="markActiveBtn" class="primary-btn">Mark Active</button>
             <button id="markClaimedBtn" class="primary-btn">Mark Claimed</button>
             <button id="markResolvedBtn" class="primary-btn">Mark Resolved</button>
@@ -159,30 +200,25 @@ function renderItems(items) {
       itemModal.classList.remove("hidden");
 
       if (owner) {
+        document
+          .getElementById("editBtn")
+          ?.addEventListener("click", () => openEditForm(item));
 
         document
           .getElementById("markActiveBtn")
-          ?.addEventListener("click", () =>
-            updateStatus(item._id, "Active")
-          );
+          ?.addEventListener("click", () => updateStatus(item._id, "Active"));
 
         document
           .getElementById("markClaimedBtn")
-          ?.addEventListener("click", () =>
-            updateStatus(item._id, "Claimed")
-          );
+          ?.addEventListener("click", () => updateStatus(item._id, "Claimed"));
 
         document
           .getElementById("markResolvedBtn")
-          ?.addEventListener("click", () =>
-            updateStatus(item._id, "Resolved")
-          );
+          ?.addEventListener("click", () => updateStatus(item._id, "Resolved"));
 
         document
           .getElementById("deleteBtn")
-          ?.addEventListener("click", () =>
-            deleteItem(item._id)
-          );
+          ?.addEventListener("click", () => deleteItem(item._id));
       }
     });
 
@@ -195,19 +231,12 @@ function renderItems(items) {
 ============================= */
 
 async function loadItems() {
-
   try {
-
     const params = new URLSearchParams();
 
-    if (categoryFilter?.value)
-      params.set("category", categoryFilter.value);
-
-    if (statusFilter?.value)
-      params.set("status", statusFilter.value);
-
-    if (showMine)
-      params.set("mine", "true");
+    if (categoryFilter?.value) params.set("category", categoryFilter.value);
+    if (statusFilter?.value) params.set("status", statusFilter.value);
+    if (showMine) params.set("mine", "true");
 
     const url = params.toString()
       ? `/api/items?${params.toString()}`
@@ -220,21 +249,15 @@ async function loadItems() {
       },
     });
 
-    if (!res.ok)
-      throw new Error("Failed to load items");
+    if (!res.ok) throw new Error("Failed to load items");
 
     const items = await res.json();
 
     renderItems(items);
-
-    loadStats(); // refresh dashboard stats
-
+    loadStats();
   } catch (err) {
-
     console.error(err);
-    itemsContainer.innerHTML =
-      "<p>Failed to load items.</p>";
-
+    itemsContainer.innerHTML = "<p>Failed to load items.</p>";
   }
 }
 
@@ -243,9 +266,7 @@ async function loadItems() {
 ============================= */
 
 async function updateStatus(itemId, status) {
-
   try {
-
     const res = await fetch(`/api/items/${itemId}/status`, {
       method: "PATCH",
       headers: {
@@ -264,12 +285,9 @@ async function updateStatus(itemId, status) {
 
     itemModal.classList.add("hidden");
     loadItems();
-
   } catch (err) {
-
     console.error(err);
     alert("Failed to update status");
-
   }
 }
 
@@ -278,13 +296,8 @@ async function updateStatus(itemId, status) {
 ============================= */
 
 async function deleteItem(itemId) {
-
   try {
-
-    const confirmed = confirm(
-      "Are you sure you want to delete this report?"
-    );
-
+    const confirmed = confirm("Are you sure you want to delete this report?");
     if (!confirmed) return;
 
     const res = await fetch(`/api/items/${itemId}`, {
@@ -301,12 +314,9 @@ async function deleteItem(itemId) {
 
     itemModal.classList.add("hidden");
     loadItems();
-
   } catch (err) {
-
     console.error(err);
     alert("Failed to delete item");
-
   }
 }
 
@@ -314,12 +324,11 @@ async function deleteItem(itemId) {
    EVENT LISTENERS
 ============================= */
 
-openFormBtn?.addEventListener("click", () => {
-  formModal.classList.remove("hidden");
-});
+openFormBtn?.addEventListener("click", openCreateForm);
 
 closeForm?.addEventListener("click", () => {
   formModal.classList.add("hidden");
+  resetFormMode();
 });
 
 closeModal?.addEventListener("click", () => {
@@ -345,20 +354,22 @@ myItemsBtn?.addEventListener("click", () => {
 });
 
 /* =============================
-   SUBMIT ITEM
+   SUBMIT ITEM / EDIT ITEM
 ============================= */
 
 itemForm?.addEventListener("submit", async (e) => {
-
   e.preventDefault();
 
-  const payload =
-    Object.fromEntries(
-      new FormData(itemForm).entries()
-    );
+  const payload = Object.fromEntries(new FormData(itemForm).entries());
 
-  const res = await fetch("/api/items", {
-    method: "POST",
+  const url = isEditMode
+    ? `/api/items/${editingItemId}`
+    : "/api/items";
+
+  const method = isEditMode ? "PUT" : "POST";
+
+  const res = await fetch(url, {
+    method,
     headers: {
       "Content-Type": "application/json",
       ...authHeaders(),
@@ -369,22 +380,19 @@ itemForm?.addEventListener("submit", async (e) => {
   const out = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-
     const details = Array.isArray(out.errors)
-      ? out.errors
-          .map((e) => `${e.path}: ${e.msg}`)
-          .join("\n")
+      ? out.errors.map((e) => `${e.path}: ${e.msg}`).join("\n")
       : "";
 
-    alert(details || out.message || "Failed to submit item");
-
+    alert(details || out.message || "Failed to save item");
     return;
   }
 
   formModal.classList.add("hidden");
-  itemForm.reset();
+  resetFormMode();
 
   loadItems();
+  loadStats();
 });
 
 /* =============================
