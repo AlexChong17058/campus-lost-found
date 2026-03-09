@@ -45,7 +45,7 @@ async function loadCurrentUser() {
     const greeting = document.getElementById("userGreeting");
 
     if (greeting) {
-      greeting.textContent = `👤 ${user.name}`;
+      greeting.textContent = `Welcome, ${user.name}!`;
     }
   } catch (err) {
     console.error("Failed to load user info");
